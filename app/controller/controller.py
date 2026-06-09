@@ -28,12 +28,12 @@ post_service = PostService(
 )
 
 
-@router.get("/", tags=["Posts"])
+@router.get("/reddit/new", tags=["Posts"])
 async def listar_posts(limit: int = 20):
     return await post_service.get_latest_posts(limit)
 
 
-@router.get("/{post_id}", tags=["Posts"])
+@router.get("/reddit/{post_id}", tags=["Posts"])
 async def buscar_post(post_id: str):
     return await post_service.get_by_id(post_id)
 
