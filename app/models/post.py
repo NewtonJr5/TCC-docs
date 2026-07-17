@@ -12,7 +12,7 @@ from ..database.base import Base
 class Post(Base):
     __tablename__ = "post"
 
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
     text = Column(Text)
     url = Column(Text)
@@ -28,6 +28,8 @@ class Post(Base):
     user = Column(String)
     type = Column(String)
 
+    external_id = Column(String)
+
     created_utc = Column(BigInteger)
     inserted_at = Column(TIMESTAMP, server_default=func.now())
 
@@ -38,7 +40,7 @@ class Post(Base):
     )
 
     parent_post_id = Column(
-        String,
+        Integer,
         ForeignKey("post.id"),
         nullable=True
     )
@@ -54,7 +56,7 @@ class Post(Base):
     )
 
     plataforma_id = Column(
-        String,
+        Integer,
         ForeignKey("plataforma.id"),
         nullable=False
     )
@@ -65,7 +67,7 @@ class Post(Base):
     )
 
     canal_id = Column(
-        String,
+        Integer,
         ForeignKey("canal.id"),
         nullable=False
     )
@@ -76,7 +78,7 @@ class Post(Base):
     )
 
     categoria_id = Column(
-        String,
+        Integer,
         ForeignKey("categoria.id"),
         nullable=True
     )

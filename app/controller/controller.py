@@ -1,6 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks
 
-
 from app.repositories.post_repository import PostRepository
 from app.repositories.canal_repository import CanalRepository
 from app.repositories.categoria_repository import CategoriaRepository
@@ -11,6 +10,9 @@ from app.services.post_service import PostService
 from app.database.connection import AsyncSessionLocal
 
 from app.pipelines.reddit_pipeline import run_pipeline
+
+from app.services.youtube_service import YoutubeService
+from app.scrapper.youtube.extrator_youtube import YouTubeExtractor
 
 session = AsyncSessionLocal()
 post_repository = PostRepository(session)
@@ -27,17 +29,65 @@ post_service = PostService(
     plataforma_repository=plataforma_repository
 )
 
+youtube_service = YoutubeService(
+    extractor=YouTubeExtractor(),
+    post_service=post_service,
+    canal_repository=canal_repository,
+    plataforma_repository=plataforma_repository
+)
 
-@router.get("/reddit/new", tags=["Posts"])
-async def listar_posts(limit: int = 20):
-    return await post_service.get_latest_posts(limit)
+@router.post("/youtube/hot", tags=["Youtube"])
+async def youtube_hot(
+    max_videos: int = 5
+):
+
+    posts = await youtube_service.extrair_hot(
+        max_videos=max_videos
+    )
+
+    return {
+        "message": "Extração concluída.",
+        "posts_salvos": len(posts)
+    }
 
 
-@router.get("/reddit/{post_id}", tags=["Posts"])
-async def buscar_post(post_id: str):
-    return await post_service.get_by_id(post_id)
+@router.post("/youtube/new", tags=["Youtube"])
+async def youtube_new(
+    query: str,
+    published_after: str,
+    published_before: str,
+    max_videos: int = 5
+):
 
+    posts = await youtube_service.extrair_new(
+        query=query,
+        published_after=published_after,
+        published_before=published_before,
+        max_videos=max_videos
+    )
 
+    return {
+        "message": "Extração concluída.",
+        "posts_salvos": len(posts)
+    }
+
+@router.post("/youtube/channel", tags=["Youtube"])
+async def youtube_channel(
+    nome_canal: str,
+    max_videos: int = 5
+):
+
+    posts = await youtube_service.extrair_canal(
+        channel_id=nome_canal,
+        max_videos=max_videos
+    )
+
+    return {
+        "message": "Extração concluída.",
+        "posts_salvos": len(posts)
+    }
+
+'''
 @router.post("/pipeline/reddit/run", tags=["Pipeline"])
 async def run_pipeline_reddit(
     subreddit: str,
@@ -51,3 +101,4 @@ async def run_pipeline_reddit(
     return {
         "message": "Pipeline iniciado"
     }
+'''

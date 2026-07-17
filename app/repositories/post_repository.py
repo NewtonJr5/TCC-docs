@@ -20,9 +20,13 @@ class PostRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def exists(self, post_id: str):
-        stmt = select(Post.id).where(Post.id == post_id)
+    async def exists(self, external_id: str) -> bool:
+        stmt = select(Post.external_id).where(
+            Post.external_id == external_id
+        )
+
         result = await self.session.execute(stmt)
+
         return result.scalar_one_or_none() is not None
 
     async def delete(self, post_id: str):
@@ -44,3 +48,12 @@ class PostRepository:
         )
 
         return result.scalars().all()
+    
+    async def get_by_external_id(self, external_id: str):
+        stmt = select(Post).where(
+            Post.external_id == external_id
+        )
+
+        result = await self.session.execute(stmt)
+
+        return result.scalar_one_or_none()

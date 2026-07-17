@@ -23,17 +23,14 @@ class PostService:
         self.plataforma_repository = plataforma_repository
         self.categoria_repository = categoria_repository
 
-    async def exists(self, post_id: str) -> bool:
-        """
-        Verifica se um post já existe na base de dados.
+    async def exists(
+        self,
+        external_id: str
+    ) -> bool:
 
-        Args:
-            post_id: Identificador único do post.
-
-        Returns:
-            True se o post existir, False caso contrário.
-        """
-        return await self.post_repository.exists(post_id)
+        return await self.post_repository.exists(
+            external_id
+        )
 
     async def get_by_id(self, post_id: str):
         """
@@ -47,75 +44,66 @@ class PostService:
         """
         return await self.post_repository.get_by_id(post_id)
 
-    async def create_from_reddit(
+    async def create(
         self,
-        reddit_post: dict,
-        canal_id: int,
-        plataforma_id: int,
-        categoria_id: int | None = None
-    ) -> Post:
-        """
-        Constrói uma entidade Post a partir dos dados retornados pela API do Reddit.
-
-        Não persiste o objeto no banco, apenas realiza o mapeamento
-        dos dados externos para o modelo interno.
-
-        Args:
-            reddit_post: Dicionário contendo os dados do post do Reddit.
-            canal_id: Identificador do canal associado.
-            plataforma_id: Identificador da plataforma.
-            categoria_id: Identificador da categoria (opcional).
-
-        Returns:
-            Objeto Post preenchido.
-        """
+        post_data: dict,
+        canal_id: str,
+        plataforma_id: str,
+        categoria_id: str | None = None
+    ):
 
         return Post(
-            id=reddit_post["id"],
+            external_id=post_data["external_id"],
             canal_id=canal_id,
             plataforma_id=plataforma_id,
             categoria_id=categoria_id,
-            text=reddit_post.get("selftext"),
-            url=reddit_post.get("url"),
-            images=[],
-            videos=[],
-            E_text=None,
-            E_images=None,
-            E_videos=None,
-            data_post=reddit_post.get("created_utc"),
-            user=reddit_post.get("author"),
-            type="reddit_post",
-            created_utc=reddit_post.get("created_utc")
+            parent_post_id=post_data.get("parent_post_id"),
+            text=post_data["text"],
+            url=post_data["url"],
+            images=post_data.get("images", []),
+            videos=post_data.get("videos", []),
+            E_text=post_data.get("E_text"),
+            E_images=post_data.get("E_images"),
+            E_videos=post_data.get("E_videos"),
+            data_post=post_data["data_post"],
+            user=post_data["user"],
+            type=post_data["type"],
+            created_utc=post_data["created_utc"]
         )
 
-    async def save_reddit_post(
+    async def save(
         self,
-        reddit_post: dict,
-        canal_id: int,
-        plataforma_id: int,
-        categoria_id: int | None = None
-    ) -> Post | None:
-        """
-        Salva um post do Reddit caso ele ainda não exista na base.
+        post_data,
+        canal_id,
+        plataforma_id,
+        categoria_id=None
+    ):
 
-        Args:
-            reddit_post: Dados do post retornados pelo Reddit.
-            canal_id: Canal associado.
-            plataforma_id: Plataforma associada.
-            categoria_id: Categoria associada (opcional).
-
-        Returns:
-            Post salvo ou None caso o post já exista.
-        """
-
-        if await self.exists(reddit_post["id"]):
+        if await self.exists(
+            post_data["external_id"]
+        ):
             return None
 
-        post = await self.create_from_reddit(
-            reddit_post=reddit_post,
-            canal_id=canal_id,
-            plataforma_id=plataforma_id,
-            categoria_id=categoria_id
+        parent_external_id = post_data.get(
+            "parent_external_id"
+        )
+
+        if parent_external_id:
+
+            parent = await self.post_repository.get_by_external_id(
+                parent_external_id
+            )
+
+            if parent is None:
+                raise ValueError(
+                    f"Post pai {parent_external_id} não encontrado."
+                )
+
+        post = await self.create(
+            post_data,
+            canal_id,
+            plataforma_id,
+            categoria_id
         )
 
         await self.post_repository.save(post)
@@ -184,125 +172,6 @@ class PostService:
         """
         return await self.post_repository.get_children(parent_post_id)
 
-    async def create_child_post(
-        self,
-        parent_post_id: str,
-        reddit_post: dict,
-        canal_id: int,
-        plataforma_id: int,
-        categoria_id: int | None = None
-    ):
-        """
-        Cria e persiste um post filho vinculado a um post pai.
-
-        Utilizado principalmente para comentários e respostas.
-
-        Args:
-            parent_post_id: Identificador do post pai.
-            reddit_post: Dados do comentário/post.
-            canal_id: Canal associado.
-            plataforma_id: Plataforma associada.
-            categoria_id: Categoria associada (opcional).
-
-        Returns:
-            Post filho criado.
-
-        Raises:
-            ValueError: Caso o post pai não exista.
-        """
-
-        parent = await self.post_repository.get_by_id(
-            parent_post_id
-        )
-
-        if not parent:
-            raise ValueError(
-                f"Post pai {parent_post_id} não encontrado"
-            )
-
-        child = await self.create_from_reddit(
-            reddit_post=reddit_post,
-            canal_id=canal_id,
-            plataforma_id=plataforma_id,
-            categoria_id=categoria_id
-        )
-
-        child.parent_post_id = parent.id
-
-        await self.post_repository.save(child)
-
-        return child
-
-    async def process_comments(
-        self,
-        comments,
-        post_map,
-        canal_id,
-        plataforma_id,
-        categoria_id=None
-    ):
-        """
-        Processa recursivamente a árvore de comentários do Reddit.
-
-        Para cada comentário:
-        - identifica o post pai;
-        - cria um post filho correspondente;
-        - atualiza o mapa de relacionamentos;
-        - processa recursivamente as respostas.
-
-        Args:
-            comments: Lista de comentários retornada pela API.
-            post_map: Mapa que relaciona IDs do Reddit aos IDs internos.
-            canal_id: Canal associado.
-            plataforma_id: Plataforma associada.
-            categoria_id: Categoria associada (opcional).
-        """
-
-        for item in comments:
-
-            if item["kind"] != "t1":
-                continue
-
-            comment = item["data"]
-
-            parent_id = comment["parent_id"]
-
-            parent_post_id = post_map.get(parent_id)
-
-            if parent_post_id is None:
-                continue
-
-            saved_comment = await self.post_service.create_child_post(
-                parent_post_id=parent_post_id,
-                reddit_post={
-                    "id": comment["id"],
-                    "author": comment.get("author"),
-                    "selftext": comment.get("body"),
-                    "url": None,
-                    "created_utc": comment.get("created_utc")
-                },
-                canal_id=canal_id,
-                plataforma_id=plataforma_id,
-                categoria_id=categoria_id
-            )
-
-            post_map[f"t1_{saved_comment.id}"] = saved_comment.id
-
-            replies = comment.get("replies")
-
-            if (
-                replies
-                and isinstance(replies, dict)
-                and "data" in replies
-            ):
-                await self.process_comments(
-                    comments=replies["data"]["children"],
-                    post_map=post_map,
-                    canal_id=canal_id,
-                    plataforma_id=plataforma_id,
-                    categoria_id=categoria_id
-                )
-    
     async def get_latest_posts(self, limit: int = 10):
         """
         Recupera os posts mais recentes.
@@ -315,3 +184,5 @@ class PostService:
         """
 
         return await self.post_repository.get_latest_posts(limit)
+    
+    

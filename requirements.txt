@@ -4,3 +4,6 @@ asyncpg
 psycopg2-binary
 python-dotenv
 loguru
+fastapi
+google-api-python-client
+uvicorn

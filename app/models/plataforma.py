@@ -9,7 +9,7 @@ from ..database.base import Base
 class Plataforma(Base):
     __tablename__ = "plataforma"
 
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
     name = Column(Text)
     url = Column(Text)

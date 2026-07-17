@@ -10,11 +10,12 @@ class Canal(Base):
     __tablename__ = "canal"
 
 
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
     name = Column(Text)
     url = Column(Text)
     followers = Column(Integer)
     Country = Column(String)
+    external_id = Column(String)
     
     posts = relationship("Post", back_populates="canal")

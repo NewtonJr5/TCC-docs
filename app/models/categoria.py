@@ -9,8 +9,8 @@ from ..database.base import Base
 class Categoria(Base):
     __tablename__ = "categoria"
 
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
     name = Column(Text)
     
-    posts = relationship("Post", back_populates="canal")
+    posts = relationship("Post", back_populates="categoria")

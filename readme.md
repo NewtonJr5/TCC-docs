@@ -50,3 +50,124 @@ app/
 | **schemas/** | Define os esquemas de validação e serialização dos dados utilizados pela API. |
 | **utils/** | Armazena funções auxiliares, constantes e utilitários compartilhados entre os módulos do sistema. |
 | **main.py** | Ponto de entrada da aplicação, responsável por inicializar a API e registrar as configurações necessárias. |
+
+# Como executar o projeto
+
+## Pré-requisitos
+
+Antes de iniciar, certifique-se de ter instalado:
+
+- Python 3.10 ou superior
+- PostgreSQL
+- Git
+
+## 1. Clonar o repositório
+
+```bash
+git clone <URL_DO_REPOSITORIO>
+cd pipeline_reddit
+```
+
+## 2. Criar o ambiente virtual
+
+### Windows
+
+```bash
+python -m venv .venv
+```
+
+### Linux/macOS
+
+```bash
+python3 -m venv .venv
+```
+
+## 3. Ativar o ambiente virtual
+
+### Windows (PowerShell)
+
+```bash
+.venv\Scripts\Activate.ps1
+```
+
+### Windows (CMD)
+
+```bash
+.venv\Scripts\activate.bat
+```
+
+### Linux/macOS
+
+```bash
+source .venv/bin/activate
+```
+
+Após a ativação, o terminal deverá exibir:
+
+```text
+(.venv)
+```
+
+## 4. Instalar as dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+## 5. Configurar as variáveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto com as informações necessárias.
+
+Exemplo:
+
+```env
+DATABASE_URL=postgresql+asyncpg://usuario:senha@localhost:5432/nome_do_banco
+
+YOUTUBE_API_KEY=sua_chave
+```
+
+## 6. Criar o banco de dados
+
+Crie um banco PostgreSQL e configure a variável `DATABASE_URL` para apontar para ele.
+
+Caso o projeto utilize migrações com Alembic:
+
+```bash
+alembic upgrade head
+```
+
+Caso contrário, execute o script SQL de criação das tabelas.
+
+## 7. Executar a aplicação
+
+```bash
+python -m uvicorn app.main:app --reload
+```
+
+A API ficará disponível em:
+
+```
+http://127.0.0.1:8000
+```
+
+## 8. Acessar a documentação
+
+Swagger UI:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+ReDoc:
+
+```
+http://127.0.0.1:8000/redoc
+```
+
+## Encerrando a aplicação
+
+Para interromper o servidor, pressione:
+
+```text
+CTRL + C
+```
