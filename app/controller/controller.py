@@ -38,16 +38,18 @@ youtube_service = YoutubeService(
 
 @router.post("/youtube/hot", tags=["Youtube"])
 async def youtube_hot(
-    max_videos: int = 5
+    max_videos: int = 5,
+    max_comments: int = 5
 ):
 
     posts = await youtube_service.extrair_hot(
-        max_videos=max_videos
+        max_videos=max_videos,
+        max_comments=max_comments
     )
 
     return {
         "message": "Extração concluída.",
-        "posts_salvos": len(posts)
+        "posts_salvos": posts
     }
 
 
@@ -56,35 +58,40 @@ async def youtube_new(
     query: str,
     published_after: str,
     published_before: str,
-    max_videos: int = 5
+    max_videos: int = 5,
+    max_comments: int = 5
 ):
 
     posts = await youtube_service.extrair_new(
         query=query,
         published_after=published_after,
         published_before=published_before,
-        max_videos=max_videos
+        max_videos=max_videos,
+        max_comments=max_comments
+
     )
 
     return {
         "message": "Extração concluída.",
-        "posts_salvos": len(posts)
+        "posts_salvos": posts
     }
 
 @router.post("/youtube/channel", tags=["Youtube"])
 async def youtube_channel(
     nome_canal: str,
-    max_videos: int = 5
+    max_videos: int = 5,
+    max_comments: int = 5
 ):
 
     posts = await youtube_service.extrair_canal(
-        channel_id=nome_canal,
-        max_videos=max_videos
+        nome_canal=nome_canal,
+        max_videos=max_videos,
+        max_comments=max_comments
     )
 
     return {
         "message": "Extração concluída.",
-        "posts_salvos": len(posts)
+        "posts_salvos": posts
     }
 
 '''

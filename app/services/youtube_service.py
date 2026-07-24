@@ -79,11 +79,13 @@ class YoutubeService:
 
     async def extrair_hot(
         self,
-        max_videos: int = 5
+        max_videos: int = 5,
+        max_comments: int = 5
     ):
 
         posts = self.extractor.extrair_hot(
-            max_videos=max_videos
+            max_videos=max_videos,
+            max_comments=max_comments
         )
 
         return await self._save_posts(posts)
@@ -93,14 +95,16 @@ class YoutubeService:
         query: str,
         published_after: str,
         published_before: str,
-        max_videos: int = 5
+        max_videos: int = 5,
+        max_comments: int = 5
     ):
 
         posts = self.extractor.extrair_new(
             query=query,
             published_after=published_after,
             published_before=published_before,
-            max_videos=max_videos
+            max_videos=max_videos,
+            max_comments=max_comments
         )
 
         return await self._save_posts(posts)
@@ -108,12 +112,14 @@ class YoutubeService:
     async def extrair_canal(
         self,
         nome_canal: str,
-        max_videos: int = 5
+        max_videos: int = 5, 
+        max_comments: int = 5
     ):
 
         posts = self.extractor.extrair_canal(
-            channel_id=nome_canal,
-            max_videos=max_videos
+            nome_canal=nome_canal,
+            max_videos=max_videos,
+            max_comments=max_comments
         )
 
         return await self._save_posts(posts)

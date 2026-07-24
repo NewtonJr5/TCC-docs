@@ -111,16 +111,17 @@ class YouTubeExtractor(ExtratorBase):
 
     def create_video_post(self, video):
 
-        timestamp = int(
-            datetime.fromisoformat(
-                video["publishedAt"].replace("Z", "+00:00")
-            ).timestamp()
-        )
+        timestamp = self.iso_to_timestamp(video["publishedAt"])
+
+        text = video["title"]
+
+        if video["description"]:
+            text += f"\n\n{video['description']}"
 
         return {
             "external_id": video["external_id"],
             "parent_external_id": None,
-            "text": video["description"],
+            "text": text,
             "url": f"https://www.youtube.com/watch?v={video['external_id']}",
             "images": [
                 video["thumbnail"]
@@ -143,7 +144,6 @@ class YouTubeExtractor(ExtratorBase):
         request = self.youtube.videos().list(
             part="snippet",
             chart="mostPopular",
-            relevanceLanguage="pt",
             regionCode="BR",
             maxResults=max_videos
         )
@@ -155,13 +155,14 @@ class YouTubeExtractor(ExtratorBase):
         for item in response["items"]:
 
             video = {
-                "external_id": item["id"],
-                "description": item["snippet"]["description"],
-                "publishedAt": item["snippet"]["publishedAt"],
-                "channelTitle": item["snippet"]["channelTitle"],
-                "channel_id": item["snippet"]["channelId"],
-                "thumbnail": item["snippet"]["thumbnails"]["high"]["url"]
-            }
+                        "external_id": item["id"],
+                        "title": item["snippet"]["title"],
+                        "description": item["snippet"]["description"],
+                        "publishedAt": item["snippet"]["publishedAt"],
+                        "channelTitle": item["snippet"]["channelTitle"],
+                        "channel_id": item["snippet"]["channelId"],
+                        "thumbnail": item["snippet"]["thumbnails"]["high"]["url"]
+                    }
 
 
             posts.append(
@@ -212,6 +213,7 @@ class YouTubeExtractor(ExtratorBase):
 
             video = {
                 "external_id": item["id"]["videoId"],
+                "title": item["snippet"]["title"],
                 "description": item["snippet"]["description"],
                 "publishedAt": item["snippet"]["publishedAt"],
                 "channelTitle": item["snippet"]["channelTitle"],
@@ -252,6 +254,7 @@ class YouTubeExtractor(ExtratorBase):
 
             video = {
                 "external_id": item["id"]["videoId"],
+                "title": item["snippet"]["title"],
                 "description": item["snippet"]["description"],
                 "publishedAt": item["snippet"]["publishedAt"],
                 "channelTitle": item["snippet"]["channelTitle"],

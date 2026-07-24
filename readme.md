@@ -61,42 +61,62 @@ Antes de iniciar, certifique-se de ter instalado:
 - PostgreSQL
 - Git
 
-## 1. Clonar o repositório
+# 1. Clonar o repositório
 
 ```bash
 git clone <URL_DO_REPOSITORIO>
 cd pipeline_reddit
 ```
 
-## 2. Criar o ambiente virtual
+# 2. Subir os containers Docker
 
-### Windows
+Certifique-se de que o Docker Desktop esteja em execução e, na raiz do projeto, execute:
+
+```bash
+docker compose up -d
+```
+
+Para verificar se os containers estão em execução:
+
+```bash
+docker ps
+```
+
+Para visualizar os logs (opcional):
+
+```bash
+docker compose logs -f
+```
+
+# 3. Criar o ambiente virtual
+
+## Windows
 
 ```bash
 python -m venv .venv
 ```
 
-### Linux/macOS
+## Linux/macOS
 
 ```bash
 python3 -m venv .venv
 ```
 
-## 3. Ativar o ambiente virtual
+# 4. Ativar o ambiente virtual
 
-### Windows (PowerShell)
+## Windows (PowerShell)
 
 ```bash
 .venv\Scripts\Activate.ps1
 ```
 
-### Windows (CMD)
+## Windows (CMD)
 
 ```bash
 .venv\Scripts\activate.bat
 ```
 
-### Linux/macOS
+## Linux/macOS
 
 ```bash
 source .venv/bin/activate
@@ -108,13 +128,13 @@ Após a ativação, o terminal deverá exibir:
 (.venv)
 ```
 
-## 4. Instalar as dependências
+# 5. Instalar as dependências
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 5. Configurar as variáveis de ambiente
+# 6. Configurar as variáveis de ambiente
 
 Crie um arquivo `.env` na raiz do projeto com as informações necessárias.
 
@@ -123,22 +143,12 @@ Exemplo:
 ```env
 DATABASE_URL=postgresql+asyncpg://usuario:senha@localhost:5432/nome_do_banco
 
-YOUTUBE_API_KEY=sua_chave
-```
-
-## 6. Criar o banco de dados
-
-Crie um banco PostgreSQL e configure a variável `DATABASE_URL` para apontar para ele.
-
-Caso o projeto utilize migrações com Alembic:
-
-```bash
-alembic upgrade head
+API_KEY_YOUTUBE=sua_chave
 ```
 
 Caso contrário, execute o script SQL de criação das tabelas.
 
-## 7. Executar a aplicação
+# 8. Executar a aplicação
 
 ```bash
 python -m uvicorn app.main:app --reload
@@ -146,28 +156,40 @@ python -m uvicorn app.main:app --reload
 
 A API ficará disponível em:
 
-```
+```text
 http://127.0.0.1:8000
 ```
 
-## 8. Acessar a documentação
+# 9. Acessar a documentação
 
 Swagger UI:
 
-```
+```text
 http://127.0.0.1:8000/docs
 ```
 
 ReDoc:
 
-```
+```text
 http://127.0.0.1:8000/redoc
 ```
 
-## Encerrando a aplicação
+# Encerrando a aplicação
 
-Para interromper o servidor, pressione:
+Para interromper a API:
 
 ```text
 CTRL + C
+```
+
+Para parar os containers Docker:
+
+```bash
+docker compose down
+```
+
+Se desejar remover também os volumes (apagando os dados persistidos do banco):
+
+```bash
+docker compose down -v
 ```

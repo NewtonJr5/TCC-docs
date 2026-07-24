@@ -2,13 +2,13 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
     async_sessionmaker
 )
+from dotenv import load_dotenv
+import os
 
-DATABASE_URL = (
-    "postgresql+asyncpg://reddit:reddit@localhost:5433/reddit_pipeline"
-)
+load_dotenv()
 
 engine = create_async_engine(
-    DATABASE_URL,
+    os.getenv("DATABASE_URL"),
     echo=False
 )
 
