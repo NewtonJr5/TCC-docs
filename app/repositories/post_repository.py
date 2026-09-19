@@ -20,6 +20,33 @@ class PostRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_by_columns(self, **filters):
+        """
+        Retorna registros filtrados por colunas do modelo.
+
+        Exemplos:
+            await repo.get_by_columns(external_id="abc123")
+            await repo.get_by_columns(user="meu_user", type="video")
+            await repo.get_by_columns(plataforma_id=[1, 2, 3])
+        """
+        stmt = select(Post)
+
+        for column_name, value in filters.items():
+            if not hasattr(Post, column_name):
+                raise ValueError(f"Coluna '{column_name}' não existe no modelo Post")
+
+            column = getattr(Post, column_name)
+
+            if value is None:
+                stmt = stmt.where(column.is_(None))
+            elif isinstance(value, (list, tuple, set)):
+                stmt = stmt.where(column.in_(value))
+            else:
+                stmt = stmt.where(column == value)
+
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
     async def exists(self, external_id: str) -> bool:
         stmt = select(Post.external_id).where(
             Post.external_id == external_id

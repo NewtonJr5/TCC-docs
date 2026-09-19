@@ -44,6 +44,17 @@ class PostService:
         """
         return await self.post_repository.get_by_id(post_id)
 
+    async def get_by_columns(self, **filters):
+        """
+        Recupera posts por qualquer coluna do modelo.
+
+        Exemplos:
+            await service.get_by_columns(external_id="abc123")
+            await service.get_by_columns(user="usuario", type="video")
+            await service.get_by_columns(plataforma_id=[1, 2, 3])
+        """
+        return await self.post_repository.get_by_columns(**filters)
+
     async def create(
         self,
         post_data: dict,
