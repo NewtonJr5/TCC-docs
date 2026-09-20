@@ -16,7 +16,7 @@ app = FastAPI(
     version="1.0.0",
     description=(
         "API para coleta, armazenamento e consulta de dados de conteúdo digital. "
-        "Permite extrair comentários e informações de canais, além de consultar "
+        "Permite extrair dados de vídeos, comentários e informações de canais, além de consultar "
         "registros salvos no banco por filtros."
     ),
     openapi_tags=[
