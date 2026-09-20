@@ -79,7 +79,7 @@ youtube_service = YoutubeService(
 @router.post(
     "/youtube/hot",
     tags=["Youtube"],
-    summary="Extrair vídeos em alta do YouTube",
+    summary="Extrair dados de vídeos em alta do YouTube",
     description=(
         "Busca os vídeos mais populares do YouTube e salva os dados no banco. "
         "Útil para monitorar tendências e coletar conteúdos em destaque."
@@ -127,7 +127,7 @@ async def youtube_hot(
 @router.post(
     "/youtube/new",
     tags=["Youtube"],
-    summary="Extrair vídeos recentes do YouTube",
+    summary="Extrair dados de vídeos recentes do YouTube",
     description=(
         "Busca vídeos recentes conforme uma consulta e intervalo de data informado. "
         "Pode ser usado para coletar conteúdo novo em um período específico."
@@ -186,7 +186,7 @@ async def youtube_new(
 @router.post(
     "/youtube/channel",
     tags=["Youtube"],
-    summary="Extrair vídeos de um canal do YouTube",
+    summary="Extrair dados de vídeos de um canal do YouTube",
     description=(
         "Busca os vídeos de um canal específico e salva os conteúdos coletados no banco. "
         "Útil para monitorar canais favoritos ou competidores."

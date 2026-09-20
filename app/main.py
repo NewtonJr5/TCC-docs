@@ -22,7 +22,7 @@ app = FastAPI(
     openapi_tags=[
         {
             "name": "Youtube",
-            "description": "Endpoints para extração de vídeos, comentários e dados de canais do YouTube."
+            "description": "Endpoints para extração de dados de vídeos, de comentários e de canais do YouTube."
         },
         {
             "name": "Posts",
