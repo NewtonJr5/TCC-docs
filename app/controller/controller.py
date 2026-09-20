@@ -43,10 +43,7 @@ class YoutubeExtractionResponse(BaseModel):
     message: str = Field(
         ..., description="Mensagem resumindo o resultado da extração."
     )
-    posts_salvos: int = Field(
-        ..., ge=0, description="Quantidade de posts armazenados na base após a operação."
-    )
-    posts: list[dict[str, Any]] = Field(
+    posts_salvos: list[dict[str, Any]] = Field(
         default_factory=list,
         description="Lista dos posts extraídos e persistidos no banco."
     )
@@ -123,7 +120,7 @@ async def youtube_hot(
 
     return {
         "message": "Extração concluída.",
-        "posts": _serialize_posts(posts),
+        "posts_salvos": _serialize_posts(posts),
     }
 
 
@@ -182,7 +179,7 @@ async def youtube_new(
 
     return {
         "message": "Extração concluída.",
-        "posts": _serialize_posts(posts),
+        "posts_salvos": _serialize_posts(posts),
     }
 
 
@@ -232,7 +229,7 @@ async def youtube_channel(
 
     return {
         "message": "Extração concluída.",
-        "posts": _serialize_posts(posts),
+        "posts_salvos": _serialize_posts(posts),
     }
 
 
