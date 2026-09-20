@@ -1,3 +1,5 @@
+import os
+
 from app.scrapper.youtube.extrator_youtube import YouTubeExtractor
 from app.services.post_service import PostService
 
@@ -49,10 +51,23 @@ class YoutubeService:
             nome=nome,
         )
 
+    def _require_env(self, name: str, example: str) -> str:
+        value = os.getenv(name)
+        if not value:
+            raise RuntimeError(
+                f"{name} não configurada. Crie um arquivo .env com {example}."
+            )
+        return value
+
     async def _save_posts(
         self,
         posts
     ):
+
+        self._require_env(
+            "DATABASE_URL",
+            "DATABASE_URL=postgresql+asyncpg://reddit:reddit@localhost:5433/reddit_pipeline"
+        )
 
         plataforma = await self._get_plataforma()
 
@@ -83,6 +98,11 @@ class YoutubeService:
         max_comments: int = 5
     ):
 
+        self._require_env(
+            "API_KEY_YOUTUBE",
+            "API_KEY_YOUTUBE=sua_chave_do_youtube"
+        )
+
         posts = self.extractor.extrair_hot(
             max_videos=max_videos,
             max_comments=max_comments
@@ -98,6 +118,11 @@ class YoutubeService:
         max_videos: int = 5,
         max_comments: int = 5
     ):
+
+        self._require_env(
+            "API_KEY_YOUTUBE",
+            "API_KEY_YOUTUBE=sua_chave_do_youtube"
+        )
 
         posts = self.extractor.extrair_new(
             query=query,
@@ -115,6 +140,11 @@ class YoutubeService:
         max_videos: int = 5, 
         max_comments: int = 5
     ):
+
+        self._require_env(
+            "API_KEY_YOUTUBE",
+            "API_KEY_YOUTUBE=sua_chave_do_youtube"
+        )
 
         posts = self.extractor.extrair_canal(
             nome_canal=nome_canal,

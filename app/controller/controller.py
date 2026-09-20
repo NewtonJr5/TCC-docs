@@ -23,12 +23,32 @@ plataforma_repository = PlataformaRepository(session)
 
 router = APIRouter()
 
+
+def _serialize_posts(posts: list[Any]) -> list[dict[str, Any]]:
+    serialized: list[dict[str, Any]] = []
+
+    for post in posts:
+        if isinstance(post, dict):
+            serialized.append(post)
+            continue
+
+        item = post.__dict__.copy()
+        item.pop("_sa_instance_state", None)
+        serialized.append(item)
+
+    return serialized
+
+
 class YoutubeExtractionResponse(BaseModel):
     message: str = Field(
         ..., description="Mensagem resumindo o resultado da extração."
     )
     posts_salvos: int = Field(
         ..., ge=0, description="Quantidade de posts armazenados na base após a operação."
+    )
+    posts: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Lista dos posts extraídos e persistidos no banco."
     )
 
 
@@ -90,14 +110,20 @@ async def youtube_hot(
     ),
 ):
 
-    posts = await youtube_service.extrair_hot(
-        max_videos=max_videos,
-        max_comments=max_comments,
-    )
+    try:
+        posts = await youtube_service.extrair_hot(
+            max_videos=max_videos,
+            max_comments=max_comments,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao extrair vídeos em alta do YouTube: {exc}",
+        ) from exc
 
     return {
         "message": "Extração concluída.",
-        "posts_salvos": posts,
+        "posts": _serialize_posts(posts),
     }
 
 
@@ -140,17 +166,23 @@ async def youtube_new(
     ),
 ):
 
-    posts = await youtube_service.extrair_new(
-        query=query,
-        published_after=published_after,
-        published_before=published_before,
-        max_videos=max_videos,
-        max_comments=max_comments,
-    )
+    try:
+        posts = await youtube_service.extrair_new(
+            query=query,
+            published_after=published_after,
+            published_before=published_before,
+            max_videos=max_videos,
+            max_comments=max_comments,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao extrair vídeos recentes do YouTube: {exc}",
+        ) from exc
 
     return {
         "message": "Extração concluída.",
-        "posts_salvos": posts,
+        "posts": _serialize_posts(posts),
     }
 
 
@@ -186,20 +218,26 @@ async def youtube_channel(
     ),
 ):
 
-    posts = await youtube_service.extrair_canal(
-        nome_canal=nome_canal,
-        max_videos=max_videos,
-        max_comments=max_comments,
-    )
+    try:
+        posts = await youtube_service.extrair_canal(
+            nome_canal=nome_canal,
+            max_videos=max_videos,
+            max_comments=max_comments,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao extrair vídeos do canal do YouTube: {exc}",
+        ) from exc
 
     return {
         "message": "Extração concluída.",
-        "posts_salvos": posts,
+        "posts": _serialize_posts(posts),
     }
 
 
 @router.get(
-    "/posts/filter",
+    "/filter",
     tags=["Posts"],
     summary="Buscar posts por filtros",
     description=(
@@ -212,19 +250,60 @@ async def youtube_channel(
         400: {"description": "Nenhum filtro informado ou filtro inválido."},
     },
 )
-async def get_posts_by_columns(request: Request):
+async def get_posts_by_columns(
+    request: Request,
+    external_id: str | None = Query(
+        default=None,
+        description="Identificador externo do post.",
+    ),
+    user: str | None = Query(
+        default=None,
+        description="Usuário autor do post.",
+    ),
+    type: str | None = Query(
+        default=None,
+        description="Tipo do post, por exemplo: youtube_video ou youtube_comment.",
+    ),
+    plataforma_id: str | None = Query(
+        default=None,
+        description="Identificador da plataforma relacionada ao post.",
+    ),
+    canal_id: str | None = Query(
+        default=None,
+        description="Identificador do canal relacionado ao post.",
+    ),
+    categoria_id: str | None = Query(
+        default=None,
+        description="Identificador da categoria relacionada ao post.",
+    ),
+):
     """
     Busca posts por filtros enviados via query string.
 
     Exemplos:
     /posts/filter?external_id=abc123
-    /posts/filter?type=video&user=meu_usuario
+    /posts/filter?type=youtube_video&user=meu_usuario
     /posts/filter?plataforma_id=1&plataforma_id=2
     """
     query_params = request.query_params.multi_items()
     filters: dict[str, Any] = {}
 
+    explicit_filters = {
+        "external_id": external_id,
+        "user": user,
+        "type": type,
+        "plataforma_id": plataforma_id,
+        "canal_id": canal_id,
+        "categoria_id": categoria_id,
+    }
+
+    for key, value in explicit_filters.items():
+        if value is not None:
+            filters[key] = value
+
     for key, value in query_params:
+        if key in {"external_id", "user", "type", "plataforma_id", "canal_id", "categoria_id"}:
+            continue
         if key in filters:
             if isinstance(filters[key], list):
                 filters[key].append(value)
@@ -247,5 +326,5 @@ async def get_posts_by_columns(request: Request):
     return {
         "message": "Posts encontrados.",
         "total": len(posts),
-        "data": posts
+        "data": _serialize_posts(posts),
     }
